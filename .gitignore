@@ -1,0 +1,14 @@
+node_modules/
+logs/
+*.log
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db
+*.before-reclean
+*.rebuilt
+_extract_*
+_extracted_*
+workspace/extract_lines.js
+memory/

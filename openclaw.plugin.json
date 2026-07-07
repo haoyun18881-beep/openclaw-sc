@@ -1,0 +1,55 @@
+{
+  "id": "sc",
+  "name": "sc",
+  "version": "5.38.0",
+  "description": "sc v5.38.0",
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "stats",
+      "memorySearch",
+      "webSearch",
+      "glob",
+      "grep",
+      "codeEditor",
+      "batchVision",
+      "emergencyStop",
+      "fileManager",
+      "spawnWorker",
+      "spawnAgent",
+      "taskPipeline"
+    ],
+    "subagentTools": [
+      "stats",
+      "memorySearch",
+      "webSearch",
+      "glob",
+      "grep",
+      "codeEditor",
+      "fileManager",
+      "spawnWorker",
+      "validate"
+    ],
+    "mainDeny": [
+      "validate"
+    ],
+    "subagentBlocked": [
+      "emergencyStop",
+      "spawnAgent",
+      "taskPipeline",
+      "batchVision"
+    ],
+    "comment": "同步自tools/mcp-tools.config.json：mainTools=12；validate 为 subagent/runtime validation 工具，main deny；子Agent blocked 见 subagentBlocked"
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      }
+    }
+  }
+}

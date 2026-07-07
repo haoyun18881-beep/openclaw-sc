@@ -1,0 +1,653 @@
+{
+  "version": "1",
+  "description": "sc MCP tools 统一配置 — v5.38.0，14个工具",
+  "apiKeys": {
+    "deepseek": "",
+    "tavily": ""
+  },
+  "search": {
+    "backends": [
+      "tavily",
+      "ddg",
+      "direct_http"
+    ],
+    "tavily": {
+      "apiKeyEnv": "TAVILY_API_KEY",
+      "timeout": 30000,
+      "maxRetries": 1,
+      "searchDepth": "advanced"
+    },
+    "ddg": {
+      "baseUrl": "https://api.duckduckgo.com",
+      "htmlBaseUrl": "https://html.duckduckgo.com/html/",
+      "timeout": 30000
+    },
+    "searxng": {
+      "baseUrl": "",
+      "timeout": 30000
+    },
+    "direct_http": {
+      "timeout": 30000,
+      "maxContentLength": 50000,
+      "searchUrl": "https://www.bing.com/search",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) OpenClaw-sc-webSearch/1.0 Safari/537.36"
+    }
+  },
+  "main": {
+    "deny": [
+      "validate"
+    ]
+  },
+  "tools": [
+    {
+      "name": "stats",
+      "description": "Worker池状态快照(无参数)——查看Worker池活跃数、排队数、任务统计等",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "memorySearch",
+      "description": "搜记忆。推荐action='smart'自动判断。可选：search_dialog(时间/关键词)|semantic_search(语义)|memory_query(全量)|lcm_recall(压缩)",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "smart",
+              "search_dialog",
+              "semantic_search",
+              "memory_query",
+              "lcm_recall"
+            ]
+          },
+          "query": {
+            "type": "string"
+          },
+          "maxResults": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "webSearch",
+      "description": "搜网页(action=web_search搜索|web_fetch抓取网页内容)",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "web_search",
+              "web_fetch"
+            ]
+          },
+          "query": {
+            "type": "string",
+            "description": "搜索关键词"
+          },
+          "url": {
+            "type": "string",
+            "description": "要提取的网页URL"
+          },
+          "maxResults": {
+            "type": "number",
+            "description": "搜索结果数量(默认5)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "glob",
+      "description": "文件 glob 模式匹配(pattern=必填, path=可选)。如 '**/*.js' 递归找所有JS文件，'*.md' 找根目录MD文件。结果按修改时间降序",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "pattern"
+        ],
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "glob 模式（必填），如 '**/*.js'、'*.{json,md}'、'plugins/*/SKILL.md'"
+          },
+          "path": {
+            "type": "string",
+            "description": "搜索根目录，默认 workspace"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "grep",
+      "description": "ripgrep 高速代码搜索(pattern=正则必填, path/glob/outputMode/ignoreCase/multiline/context/headLimit可选)。outputMode: content(带行号)/files_with_matches(仅文件名)/count(文件+计数)",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "pattern"
+        ],
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "正则搜索模式（必填），如 'function\\\\s+\\\\w+'"
+          },
+          "path": {
+            "type": "string",
+            "description": "搜索路径，默认 workspace"
+          },
+          "glob": {
+            "type": "string",
+            "description": "文件筛选 glob，如 '*.js'、'*.{json,md}'"
+          },
+          "outputMode": {
+            "type": "string",
+            "enum": [
+              "content",
+              "files_with_matches",
+              "count"
+            ],
+            "description": "content(带行号)/files_with_matches(仅路径)/count(计数)"
+          },
+          "ignoreCase": {
+            "type": "boolean",
+            "description": "忽略大小写"
+          },
+          "multiline": {
+            "type": "boolean",
+            "description": "多行模式，可跨行匹配"
+          },
+          "context": {
+            "type": "number",
+            "description": "显示匹配行前后各N行"
+          },
+          "headLimit": {
+            "type": "number",
+            "description": "输出上限（默认250，0=不限）"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "codeEditor",
+      "description": "编辑/审查代码(action=edit_code/review_code)——先用review_code读文件内容，再用edit_code(edits=[{oldText,newText}])精准替换，不改整文件。子Agent改完代码必须调validate验证",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "edit_code",
+              "review_code"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "description": "文件路径"
+          },
+          "edits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "oldText",
+                "newText"
+              ],
+              "properties": {
+                "oldText": {
+                  "type": "string",
+                  "description": "被替换的原文（必须精确匹配）"
+                },
+                "newText": {
+                  "type": "string",
+                  "description": "替换后的新文"
+                }
+              }
+            },
+            "description": "精确替换对数组 [{oldText, newText}]"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "batchVision",
+      "description": "看图(传files数组读取指定图；传[\"latest\"]或[\"current\"]自动读最新一张；不传files默认读最新一张；串行处理不炸GPU)",
+      "inputSchema": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "图片文件名/路径数组。传\"latest\"或\"current\"自动取最新一张；传文件名自动去media/inbound/目录找；传完整路径直接读；不传默认取最新一张"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "可选，分析提示词"
+          },
+          "model": {
+            "type": "string",
+            "description": "可选，视觉模型名，默认从openclaw.json读取"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "emergencyStop",
+      "description": "⛔ 高危熔断！除非用户明确说'紧急停止'，绝不调用！status也会触发停止(BUG)勿用它查状态。日常用stats。(action=stop_all/kill_subagents/status)",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "stop_all",
+              "kill_subagents",
+              "status"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "fileManager",
+      "description": "文件操作(action=read读|write写|list列目录|copy复制|move移动，无delete权限)。copy/move 使用 dest 作为目的路径，target 仅为兼容别名。⚠️ write仅允许workspace目录(安全限制)，子Agent不可删除文件",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action",
+          "path"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write",
+              "list",
+              "copy",
+              "move"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "dest": {
+            "type": "string",
+            "description": "copy/move 的目的路径；新 TaskCard 优先使用 dest"
+          },
+          "target": {
+            "type": "string",
+            "description": "copy/move 的 deprecated 兼容别名；新 TaskCard 使用 dest"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "spawnWorker",
+      "description": "Worker池(action=search|analyze|semantic|diff|stats，keyword/query/files/path参数)",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "search",
+              "analyze",
+              "semantic",
+              "diff",
+              "stats"
+            ]
+          },
+          "keyword": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "path": {
+            "type": "string",
+            "description": "搜索目录路径，不传则用 files 列表"
+          },
+          "query": {
+            "type": "string"
+          },
+          "maxResults": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "spawnAgent",
+      "description": "派单路子Agent(prompt必填，model默认deepseek-v4-flash，timeout默认600秒，maxRounds默认100轮)。当前 bridge 不实现 count fan-out；多路同任务请用 taskPipeline 展开多个 group。⚠️ 子Agent不可用此工具(防递归blocked)，不可派兵",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "prompt"
+        ],
+        "properties": {
+          "prompt": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "timeout": {
+            "type": "number"
+          },
+          "maxRounds": {
+            "type": "number"
+          },
+          "taskName": {
+            "type": "string"
+          },
+          "batchName": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "runDir": {
+            "type": "string"
+          },
+          "taskCard": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "collector": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "budgets": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "acceptance": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "toolPolicy": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "tool_policy": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "notifyPolicy": {
+            "type": "string"
+          },
+          "raw_output_policy": {
+            "type": "string",
+            "enum": [
+              "no_full_dump"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "taskPipeline",
+      "description": "树状多层派兵编排：一次调用=派多路不同任务AI兵。groups传[{name,prompt,model?,timeout?,maxRounds?}], maxWait=等待超时(ms,默认0=无限等且只停止等待不杀兵)。groups>10默认stagger分批(每批10路×20ms间隔)；stagger或maxWait<=500会fire-and-return。runId/runDir/collector属于TaskCard和EvidenceBundle回收纪律，不是当前runtime输入字段",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "groups"
+        ],
+        "properties": {
+          "batchName": {
+            "type": "string",
+            "description": "战役名称"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "prompt"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "兵名称"
+                },
+                "prompt": {
+                  "type": "string",
+                  "description": "兵的任务指令"
+                },
+                "model": {
+                  "type": "string",
+                  "description": "模型(默认deepseek-v4-flash)"
+                },
+                "timeout": {
+                  "type": "number",
+                  "description": "超时秒数(默认600)"
+                },
+                "maxRounds": {
+                  "type": "number",
+                  "description": "最大工具轮次(默认100)"
+                },
+                "toolPolicy": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "tool_policy": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            },
+            "description": "兵的任务列表，每路兵一个独立prompt；多路同任务需显式展开多个group"
+          },
+          "maxWait": {
+            "type": "number",
+            "description": "最大等待毫秒数(默认0=无限等)。超时仅停止等待，不杀兵；maxWait<=500会派完即回"
+          },
+          "staggerMs": {
+            "type": "number",
+            "description": "分批间隔毫秒(groups>10时默认20ms。staggerMs>0会派完即回，必须另行collector/DONE回收)"
+          },
+          "staggerBatchSize": {
+            "type": "number",
+            "description": "每批兵数(groups>10时默认10。设小值减轻MCP传输压力；需与runId/runDir/collector纪律配套)"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "runDir": {
+            "type": "string"
+          },
+          "taskCard": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "collector": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "budgets": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "acceptance": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "toolPolicy": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "tool_policy": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "notifyPolicy": {
+            "type": "string"
+          },
+          "raw_output_policy": {
+            "type": "string",
+            "enum": [
+              "no_full_dump"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "scInbox",
+      "description": "SC完成事件收件箱(action=pending|recent|report|ack|stats)。pending只返回未ack事件；chat-inject成功后事件会被ack，此时用recent或includeAcked=true核实最近事件。用于回收SC子Agent completion event；不是用户输入，也不是伪造assistant回复。子Agent不可调用。",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "recent",
+              "report",
+              "ack",
+              "stats"
+            ]
+          },
+          "limit": {
+            "type": "number",
+            "description": "返回事件上限，默认20，最大200"
+          },
+          "eventIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "ack 指定事件ID"
+          },
+          "taskIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "ack 指定任务ID"
+          },
+          "all": {
+            "type": "boolean",
+            "description": "ack 全部未确认事件"
+          },
+          "ack": {
+            "type": "boolean",
+            "description": "report 后是否立即ack；默认false，建议用户可见汇报成功后再ack"
+          },
+          "includeAcked": {
+            "type": "boolean",
+            "description": "是否包含已ack事件；chat-inject自动ack后核实最近完成事件时设为true，或使用action=recent"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "validate",
+      "description": "代码验证工具(action=check语法检查|load模块加载|diff查看改动)——check跑 node --check，load隔离子进程验证模块加载，diff用 git diff 看文件改动。子Agent改完代码后必须调此工具确认代码无误",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "action",
+          "path"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "check",
+              "load",
+              "diff"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "description": "要验证/查看的文件路径"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "subagent": {
+    "blocked": [
+      "emergencyStop",
+      "spawnAgent",
+      "taskPipeline",
+      "scInbox",
+      "batchVision"
+    ],
+    "partialAllowed": {
+      "codeEditor": {
+        "description": "子agent仅允许edit_code/review_code",
+        "actions": [
+          "edit_code",
+          "review_code"
+        ]
+      },
+      "fileManager": {
+        "description": "子agent仅允许read/list/write/copy/move",
+        "actions": [
+          "read",
+          "list",
+          "write",
+          "copy",
+          "move"
+        ]
+      }
+    }
+  }
+}

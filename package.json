@@ -1,0 +1,63 @@
+{
+  "name": "openclaw-sc",
+  "version": "5.38.0",
+  "description": "OpenClaw sc plugin for sub-agent orchestration, MCP tool routing, local worker tasks, and memory retrieval.",
+  "changelog": "v5.5.0 → v5.7.1: 司令铁律补丁(patch-before-tool-call.ps1) / 内置工具走before_tool_call / 路由守卫全覆盖 / 备份加时间戳防回滚旧版 / 紧急模式恢复防抖60秒",
+  "changelogDetail": "v5.7.1: 路由修复: routeQuick集成L0-L7分类 / 代码去重 / 文档同步",
+  "type": "module",
+  "main": "index.js",
+  "license": "BUSL-1.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haoyun18881-beep/openclaw-sc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/haoyun18881-beep/openclaw-sc/issues"
+  },
+  "homepage": "https://github.com/haoyun18881-beep/openclaw-sc#readme",
+  "files": [
+    "index.js",
+    "lib",
+    "tools",
+    "vector",
+    "workers",
+    "security.js",
+    "openclaw.plugin.json",
+    "INSTALL.md",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    ".env.example"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "lint": "node --check index.js && node --check security.js && node --check tools/bridge.js && node --check tools/sidecar/sidecar-server.cjs && node --check tools/sidecar/subagent-runner.cjs",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "openclaw",
+    "agent",
+    "subagent",
+    "mcp",
+    "memory",
+    "worker"
+  ],
+  "dependencies": {
+    "acorn": "^8.16.0",
+    "archiver": "^8.0.0"
+  },
+  "optionalDependencies": {
+    "usearch": "^2.25.3"
+  },
+  "openclaw": {
+    "compat": {
+      "pluginApi": "^2026.5.28"
+    },
+    "build": {
+      "openclawVersion": "2026.6.1"
+    }
+  }
+}
