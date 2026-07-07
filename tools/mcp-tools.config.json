@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "description": "sc MCP tools 统一配置 — v5.38.0，14个工具",
+  "description": "sc MCP tools unified config - v5.38.1, 14 tools",
   "apiKeys": {
     "deepseek": "",
     "tavily": ""

@@ -1,7 +1,7 @@
 {
   "name": "openclaw-sc",
-  "version": "5.38.0",
-  "description": "OpenClaw sc plugin for sub-agent orchestration, MCP tool routing, local worker tasks, and memory retrieval.",
+  "version": "5.38.1",
+  "description": "OpenClaw agent control plane for sub-agent orchestration, MCP tool routing, completion inboxes, worker jobs, memory/search, and validation guardrails.",
   "changelog": "v5.5.0 → v5.7.1: 司令铁律补丁(patch-before-tool-call.ps1) / 内置工具走before_tool_call / 路由守卫全覆盖 / 备份加时间戳防回滚旧版 / 紧急模式恢复防抖60秒",
   "changelogDetail": "v5.7.1: 路由修复: routeQuick集成L0-L7分类 / 代码去重 / 文档同步",
   "type": "module",
@@ -41,7 +41,11 @@
     "openclaw",
     "agent",
     "subagent",
+    "agent-control-plane",
+    "orchestration",
+    "completion-inbox",
     "mcp",
+    "tool-bridge",
     "memory",
     "worker"
   ],
