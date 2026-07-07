@@ -9,6 +9,11 @@ The short version: sc is not just a bag of tools. It is the execution layer that
 lets an agent act like a task commander while still leaving behind artifacts
 that a human or a main agent can inspect.
 
+It is especially strong when the work is search-heavy or evidence-heavy:
+instead of asking one main agent to inspect everything serially, the main agent
+can write compact task cards, send many bounded lanes out, and collect short
+completion events back through the inbox.
+
 This repository is the public source package. It excludes private runtime
 state, local logs, task inbox files, backups, service binaries, credentials, and
 machine-specific OpenClaw memory.
@@ -41,6 +46,49 @@ sc is built around those operational problems.
 | Batch orchestration | `taskPipeline` supports multi-group dispatch, staggered fan-out, fire-and-return behavior, and collector fields. |
 | Memory retrieval hooks | Dialog search, semantic search, full memory query, and compressed recall can be exposed through one memory tool. |
 | Local-first package | The public package ships source and contracts, not private logs, inbox state, credentials, service binaries, or backups. |
+
+## High-Throughput Workflows
+
+sc is designed for controlled fan-out. A capable host can split a large job into
+many small, auditable slices:
+
+- large repository inventory
+- multi-angle code audit
+- wide web or documentation research
+- source comparison across many files or pages
+- local data slicing with deterministic workers
+- staged pipelines where one wave of results produces the next wave of tasks
+
+The practical pattern is simple:
+
+1. The main agent writes a bounded task card.
+2. sc dispatches sub-agents or local workers with clear tool limits.
+3. Results return as completion events and task-state artifacts.
+4. The main agent reviews, merges, rejects, or sends another wave.
+
+For search, inventory, classification, and evidence collection, this can turn a
+long serial workflow into a short coordinated run. The actual speed depends on
+model provider limits, network limits, hardware, task size, and the host's
+review discipline.
+
+## Responsible Use
+
+sc can create substantial outbound request volume when you configure large
+fan-out, web search, or many concurrent workers. You are responsible for setting
+safe limits and using it only where you have permission.
+
+Before running high-concurrency tasks, configure:
+
+- provider and site rate limits
+- maximum fan-out and queue depth
+- per-task timeout and retry limits
+- allowed domains or file roots
+- evidence size limits
+- stop conditions and review gates
+
+Do not use sc to overload websites, evade access controls, scrape private data,
+or bypass the terms of any service or API provider. The package gives you an
+orchestration layer; it does not make unsafe or unauthorized activity acceptable.
 
 ## Core Capabilities
 
@@ -153,6 +201,8 @@ place to enforce task cards, budgets, tool policy, and review gates.
 
 - Let one main OpenClaw agent dispatch 3 to 10 bounded review tasks and collect
   structured completion events.
+- Scale search or audit work to dozens or hundreds of bounded lanes when the
+  host, provider, network, and task policy allow it.
 - Run a background search or workspace inventory without flooding the chat.
 - Give sub-agents enough tools to inspect and edit code while blocking recursive
   spawning and emergency controls.
@@ -283,6 +333,10 @@ artifacts. Review `SECURITY.md` before publishing forks or sharing task reports.
 Never publish real `.env`, `openclaw.json`, logs, task-state JSON, inbox events,
 credentials, cookies, tokens, private prompts, or full local paths from a
 private deployment.
+
+For public or shared deployments, start with low fan-out, short timeouts, narrow
+workspace roots, and explicit domain allowlists. Increase concurrency only after
+you have measured provider limits, target-system tolerance, and review quality.
 
 ## License
 

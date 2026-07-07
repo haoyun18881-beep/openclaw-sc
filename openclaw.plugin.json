@@ -1,8 +1,8 @@
 {
   "id": "sc",
   "name": "sc",
-  "version": "5.38.1",
-  "description": "sc v5.38.1 - OpenClaw agent control plane with sub-agent orchestration, tool routing, worker jobs, completion inboxes, and validation guardrails.",
+  "version": "5.38.2",
+  "description": "sc v5.38.2 - OpenClaw agent control plane for bounded sub-agent fan-out, search/audit orchestration, tool routing, worker jobs, completion inboxes, and validation guardrails.",
   "activation": {
     "onStartup": true
   },
