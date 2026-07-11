@@ -1,75 +1,69 @@
 # OpenClaw sc
 
-sc is an OpenClaw agent control plane. It gives an OpenClaw main agent a bounded
-way to dispatch sub-agents, route tools, run local worker jobs, collect
-completion events, search memory, fetch web evidence, edit files, and validate
-code without turning the human chat into a coordination log.
+> **让 OpenClaw 默认百路、配置即可100+子 Agent 大面积调研、查代码和找 Bug，再把本地免费任务交给真正的多核 CPU Worker。**
 
-The short version: sc is not just a bag of tools. It is the execution layer that
-lets an agent act like a task commander while still leaving behind artifacts
-that a human or a main agent can inspect.
+OpenClaw sc 是 OpenClaw 深度适配版的 Agent 控制平面。它不是“小工具合集”，而是把一个主 Agent 升级成任务总指挥：AI 任务走百级并行，本地确定性任务走多核 Worker，结果统一回收到收件箱和证据链。
 
-It is especially strong when the work is search-heavy or evidence-heavy:
-instead of asking one main agent to inspect everything serially, the main agent
-can write compact task cards, send many bounded lanes out, and collect short
-completion events back through the inbox.
+## 它最强的地方
 
-This repository is the public source package. It excludes private runtime
-state, local logs, task inbox files, backups, service binaries, credentials, and
-machine-specific OpenClaw memory.
+### 1. 默认百路、可配置100+子 Agent 并行全网调研
 
-## Why This Exists
+一个问题可以拆成上百条独立路线，同时搜索网站、文档、社区和不同来源。公共代码默认支持100组 `taskPipeline`，上限可配置继续提高。
 
-Most agent runtimes can call tools, but larger work quickly needs more than
-one-off tool calls:
+### 2. 默认百路、可配置100+子 Agent 同时查大型代码项目
 
-- A main agent needs to send bounded work to sub-agents.
-- Sub-agents need fewer permissions than the main agent.
-- Results need to come back as inspectable completion events, not noisy chat.
-- Repetitive local work should run in cheap deterministic workers.
-- Code edits need a validation path.
-- Memory and web evidence need short, bounded returns.
-- Large fan-out needs run IDs, collector discipline, and timeout behavior.
+可以把仓库按目录、模块、语言或风险面切开，让百级子 Agent 同时找 Bug、查安全问题、做代码审计和交叉验证，而不是让一个 Agent 串行翻完整个仓库。
 
-sc is built around those operational problems.
+### 3. 真正的多核本地 Worker
 
-## What Makes sc Different
+搜索、切片、统计、diff、批处理等确定性任务不需要调用 LLM，不花模型 Token。Worker 池按检测到的 CPU 核心数自动扩展，也可以通过配置控制，多核机器可以真正发挥出来。
 
-| Strength | What it means |
-| --- | --- |
-| Agent control plane | `spawnAgent` and `taskPipeline` create bounded AI sub-tasks instead of asking the main agent to do every step. |
-| Completion inbox | Sub-agent completion events can be stored, reported, acknowledged, and kept out of the human chat when desired. |
-| Tool boundary model | Main and sub-agent tool sets are different. Sub-agents cannot recursively spawn agents or trigger high-risk controls. |
-| Deterministic worker lane | `spawnWorker` handles search, analyze, semantic, diff, and stats work without spending model tokens. |
-| Evidence-friendly tools | `grep`, `glob`, `memorySearch`, and `webSearch` return bounded evidence for review instead of uncontrolled dumps. |
-| Validation guardrails | Sub-agent code edits can be followed by `validate` checks such as syntax, module load, and diff review. |
-| Batch orchestration | `taskPipeline` supports multi-group dispatch, staggered fan-out, fire-and-return behavior, and collector fields. |
-| Memory retrieval hooks | Dialog search, semantic search, full memory query, and compressed recall can be exposed through one memory tool. |
-| Local-first package | The public package ships source and contracts, not private logs, inbox state, credentials, service binaries, or backups. |
+### 4. 主 Agent 只负责判断，不再亲自搬砖
 
-## High-Throughput Workflows
+最强的模型留给规划、任务拆分、复核和最终裁决；重复搜索和大面积扫描交给子 Agent 或本地 Worker。
 
-sc is designed for controlled fan-out. A capable host can split a large job into
-many small, auditable slices:
+### 5. 百路结果不会淹没主聊天
 
-- large repository inventory
-- multi-angle code audit
-- wide web or documentation research
-- source comparison across many files or pages
-- local data slicing with deterministic workers
-- staged pipelines where one wave of results produces the next wave of tasks
+完成事件进入 Completion Inbox（完成收件箱），可以查看、确认和回收，不需要把几百条协调信息全部塞进用户聊天。
 
-The practical pattern is simple:
+### 6. 主 Agent 和子 Agent 权限分开
 
-1. The main agent writes a bounded task card.
-2. sc dispatches sub-agents or local workers with clear tool limits.
-3. Results return as completion events and task-state artifacts.
-4. The main agent reviews, merges, rejects, or sends another wave.
+子 Agent 不能递归派兵，也不能直接调用高风险控制。大规模并行仍然有任务边界、超时、失败阈值和停止条件。
 
-For search, inventory, classification, and evidence collection, this can turn a
-long serial workflow into a short coordinated run. The actual speed depends on
-model provider limits, network limits, hardware, task size, and the host's
-review discipline.
+### 7. 搜索、代码修改和验证形成闭环
+
+SC 不只会派任务，还能回收证据、检查缺失路线，并对代码修改执行语法、模块加载和 diff 验证。
+
+### 8. 为 OpenClaw 深度适配，也能作为通用 Agent 架构参考
+
+SC 直接接入 OpenClaw 的插件、工具、会话和记忆体系；它的 TaskCard、流水线、Worker、收件箱和证据回收设计也可以移植到其他智能体框架。
+
+## 最简单的用法
+
+安装并启用后，直接告诉 OpenClaw：
+
+```text
+同时派100个子 Agent，全网调研这个问题
+把这个代码仓库切成100路，同时查 Bug
+用 taskPipeline 做百路并行审计
+用本地 Worker 切片、搜索、统计和 diff
+把子 Agent 结果收进完成收件箱，最后统一复核
+```
+
+`spawnAgent` 用于单路任务；多路并行使用 `taskPipeline`。默认流水线上限是100组，可以通过 `SC_PIPELINE_MAX_GROUPS` 配置更高上限。高并发会真实消耗模型额度和外部搜索配额，请按自己的服务能力设置。
+
+## English quick overview
+
+OpenClaw sc turns one OpenClaw main agent into a high-throughput control plane:
+
+- 100-task pipelines by default, configurable beyond 100;
+- wide web research and large-repository bug audits;
+- real multi-core local workers for zero-token search, slicing, stats, and diff;
+- completion inboxes that keep fan-out noise out of the human chat;
+- separate permissions for main and sub-agents;
+- bounded task cards, evidence collection, validation, and failure thresholds.
+
+The public package contains source and contracts—not private logs, credentials, inbox state, service binaries, or machine-specific memory.
 
 ## Responsible Use
 
